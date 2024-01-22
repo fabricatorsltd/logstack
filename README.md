@@ -813,143 +813,221 @@ The most common benchmarks(disable/normal/interface/printf/caller) with zap/zero
 package main
 
 import (
-	"io"
-	"testing"
+  "io"
+  "os"
+  "testing"
 
-	"github.com/fabricatorsltd/logstack"
-	"github.com/rs/zerolog"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+  log "github.com/fabricatorsltd/logstack"
+  "github.com/rs/zerolog"
+  "go.uber.org/zap"
+  "go.uber.org/zap/zapcore"
 )
 
 const msg = "The quick brown fox jumps over the lazy dog"
-var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
+
+var obj = struct {
+  Rate string
+  Low  int
+  High float32
+}{"15", 16, 123.2}
 
 func BenchmarkDisableZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	))
-	for i := 0; i < b.N; i++ {
-		logger.Debug(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
-	}
+  logger := zap.New(zapcore.NewCore(
+    zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+    zapcore.AddSync(io.Discard),
+    zapcore.InfoLevel,
+  ))
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Debug(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+  }
 }
 
 func BenchmarkDisableZeroLog(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  zerolog.SetGlobalLevel(zerolog.InfoLevel)
+  logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
 }
 
 func BenchmarkDisablePhusLog(b *testing.B) {
-	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
 }
 
 func BenchmarkNormalZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	))
-	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
-	}
+  logger := zap.New(zapcore.NewCore(
+    zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+    zapcore.AddSync(io.Discard),
+    zapcore.InfoLevel,
+  ))
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+  }
 }
 
 func BenchmarkNormalZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
 }
 
 func BenchmarkNormalPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
 }
 
 func BenchmarkInterfaceZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	)).Sugar()
-	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &obj)
-	}
+  logger := zap.New(zapcore.NewCore(
+    zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+    zapcore.AddSync(io.Discard),
+    zapcore.InfoLevel,
+  )).Sugar()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Infow(msg, "object", &obj)
+  }
 }
 
 func BenchmarkInterfaceZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
-	}
+  logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Interface("object", &obj).Msg(msg)
+  }
 }
 
 func BenchmarkInterfacePhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
-	}
+  logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Interface("object", &obj).Msg(msg)
+  }
 }
 
 func BenchmarkPrintfZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	)).Sugar()
-	for i := 0; i < b.N; i++ {
-		logger.Infof("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
+  logger := zap.New(zapcore.NewCore(
+    zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+    zapcore.AddSync(io.Discard),
+    zapcore.InfoLevel,
+  )).Sugar()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Infof("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+  }
 }
 
 func BenchmarkPrintfZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
+  logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+  }
 }
 
 func BenchmarkPrintfPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
+  logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+  }
 }
 
 func BenchmarkCallerZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel),
-		zap.AddCaller(),
-	)
-	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
-	}
+  logger := zap.New(zapcore.NewCore(
+    zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+    zapcore.AddSync(io.Discard),
+    zapcore.InfoLevel),
+    zap.AddCaller(),
+  )
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+  }
 }
 
 func BenchmarkCallerZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Caller().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  logger := zerolog.New(io.Discard).With().Caller().Timestamp().Logger()
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
 }
 
 func BenchmarkCallerPhusLog(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
+  logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
+  tokenErr := setBSToken(&logger)
+  if tokenErr != "" {
+    b.Fatal(tokenErr)
+  }
+  for i := 0; i < b.N; i++ {
+    logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+  }
+}
+
+func setBSToken(l *log.Logger) string {
+  bsToken := os.Getenv("BETTERSTACK_TOKEN")
+  if bsToken == "" {
+    return "please set BETTERSTACK_TOKEN env"
+  }
+
+  l.SetToken(bsToken)
+  l.GoSync = true
+
+  return ""
 }
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
