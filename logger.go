@@ -1,11 +1,13 @@
 package log
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	stdLog "log"
 	"net"
+	"net/http"
 	"net/netip"
 	"os"
 	"reflect"
@@ -19,18 +21,22 @@ import (
 
 // DefaultLogger is the global logger.
 var DefaultLogger = Logger{
-	Level:      DebugLevel,
-	Caller:     0,
-	TimeField:  "",
-	TimeFormat: "",
-	Writer:     IOWriter{os.Stderr},
+	Level:            DebugLevel,
+	Caller:           0,
+	TimeField:        "",
+	TimeFormat:       "",
+	Writer:           IOWriter{os.Stderr},
+	BetterStackToken: "",
 }
 
 // Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Entry struct {
-	buf   []byte
-	Level Level
-	w     Writer
+	buf     []byte
+	Level   Level `json:"level"`
+	w       Writer
+	Dt      string                   `json:"dt"`
+	Message string                   `json:"message"`
+	Data    []map[string]interface{} `json:"-"`
 }
 
 // Writer defines an entry writer interface.
@@ -90,6 +96,12 @@ type Logger struct {
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
+
+	// BetterStackToken specifies the token to use for BetterStack API.
+	BetterStackToken string
+
+	// GoSync specifies if the call to BetterStack should run in routine
+	GoSync bool
 }
 
 // TimeFormatUnix defines a time format that makes time fields to be
@@ -227,6 +239,12 @@ func Printf(format string, v ...interface{}) {
 		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Msgf(format, v...)
+
+}
+
+// SetToken sets the BetterStack token to use.
+func (l *Logger) SetToken(token string) {
+	l.BetterStackToken = token
 }
 
 // Trace starts a new message with trace level.
@@ -466,11 +484,15 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, l.TimeField...)
 		e.buf = append(e.buf, '"', ':')
 	}
+
+	sec, nsec, _ := now()
 	switch l.TimeFormat {
 	case "":
-		sec, nsec, _ := now()
 		var tmp [32]byte
 		var buf []byte
+		sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
+		year, month, day, _ := absDate(uint64(sec), true)
+		hour, minute, second := absClock(uint64(sec))
 		if timeOffset == 0 {
 			// "2006-01-02T15:04:05.999Z"
 			tmp[25] = '"'
@@ -487,10 +509,6 @@ func (l *Logger) header(level Level) *Entry {
 			tmp[24] = timeZone[0]
 			buf = tmp[:31]
 		}
-		// date time
-		sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
-		year, month, day, _ := absDate(uint64(sec), true)
-		hour, minute, second := absClock(uint64(sec))
 		// year
 		a := year / 100 * 2
 		b := year % 100 * 2
@@ -534,7 +552,6 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, buf...)
 	case TimeFormatUnix:
-		sec, _, _ := now()
 		// 1595759807
 		var tmp [10]byte
 		// seconds
@@ -560,7 +577,6 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
-		sec, nsec, _ := now()
 		// 1595759807105
 		var tmp [13]byte
 		// milli seconds
@@ -592,7 +608,6 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixWithMs:
-		sec, nsec, _ := now()
 		// 1595759807.105
 		var tmp [14]byte
 		// milli seconds
@@ -629,6 +644,13 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
 		e.buf = append(e.buf, '"')
 	}
+
+	// date time
+	sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
+	year, month, day, _ := absDate(uint64(sec), true)
+	hour, minute, second := absClock(uint64(sec))
+	e.Dt = fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d %s", year, month, day, hour, minute, second, timeZone)
+
 	// level
 	switch level {
 	case DebugLevel:
@@ -787,7 +809,7 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 		e.buf = append(e.buf, '-')
 	}
 	e.buf = strconv.AppendInt(e.buf, int64(d/time.Millisecond), 10)
-	if n := (d % time.Millisecond); n != 0 {
+	if n := d % time.Millisecond; n != 0 {
 		var tmp [7]byte
 		b := n % 100 * 2
 		n /= 100
@@ -821,7 +843,7 @@ func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendInt(e.buf, int64(d/time.Millisecond), 10)
-	if n := (d % time.Millisecond); n != 0 {
+	if n := d % time.Millisecond; n != 0 {
 		var tmp [7]byte
 		b := n % 100 * 2
 		n /= 100
@@ -857,7 +879,7 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 			e.buf = append(e.buf, '-')
 		}
 		e.buf = strconv.AppendInt(e.buf, int64(a/time.Millisecond), 10)
-		if n := (a % time.Millisecond); n != 0 {
+		if n := a % time.Millisecond; n != 0 {
 			var tmp [7]byte
 			b := n % 100 * 2
 			n /= 100
@@ -1272,6 +1294,7 @@ func (e *Entry) Str(key string, val string) *Entry {
 	e.buf = append(e.buf, '"', ':', '"')
 	e.string(val)
 	e.buf = append(e.buf, '"')
+	e.Data = append(e.Data, map[string]interface{}{key: val})
 	return e
 }
 
@@ -1602,6 +1625,7 @@ func (e *Entry) Msg(msg string) {
 	} else {
 		e.buf = append(e.buf, '}', '\n')
 	}
+	e.Message = msg
 	_, _ = e.w.WriteEntry(e)
 	if (e.Level == FatalLevel) && notTest {
 		os.Exit(255)
@@ -1611,6 +1635,22 @@ func (e *Entry) Msg(msg string) {
 	}
 	if cap(e.buf) <= bbcap {
 		epool.Put(e)
+	}
+
+	if DefaultLogger.BetterStackToken != "" {
+		if DefaultLogger.GoSync {
+			err := sendToBetterLogs(e)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			go func(ent *Entry) {
+				err := sendToBetterLogs(ent)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(e)
+		}
 	}
 }
 
@@ -1642,6 +1682,21 @@ func (e *Entry) Msgf(format string, v ...interface{}) {
 	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
+	}
+	if DefaultLogger.BetterStackToken != "" {
+		if DefaultLogger.GoSync {
+			err := sendToBetterLogs(e)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			go func(ent *Entry) {
+				err := sendToBetterLogs(ent)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(e)
+		}
 	}
 	e.Msg("")
 }
@@ -2141,3 +2196,54 @@ func callers(skip int, pcbuf []uintptr) int
 //go:noescape
 //go:linkname Fastrandn runtime.fastrandn
 func Fastrandn(x uint32) uint32
+
+func sendToBetterLogs(e *Entry) error {
+	fmt.Println("BS: Posting log to BetterStack...")
+
+	url := "https://in.logs.betterstack.com"
+
+	jsonMap := map[string]interface{}{
+		"dt":      e.Dt,
+		"level":   e.Level,
+		"message": e.Message,
+	}
+
+	// Add each item in the Data map as a separate property
+	for _, dataItem := range e.Data {
+		for key, value := range dataItem {
+			jsonMap[key] = value
+		}
+	}
+
+	payloadBytes, err := json.Marshal(jsonMap)
+	if err != nil {
+		fmt.Println("BS: Error marshalling payload", err)
+		return err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		fmt.Println("BS: Error creating request", err)
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+DefaultLogger.BetterStackToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("BS: Error posting log", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		err = fmt.Errorf("unexpected response status: %d", resp.StatusCode)
+		fmt.Println("BS: Error posting log", err)
+		return err
+	}
+
+	fmt.Println("BS: Log posted successfully")
+	return nil
+}

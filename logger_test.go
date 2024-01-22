@@ -16,6 +16,10 @@ import (
 
 func TestLoggerDefault(t *testing.T) {
 	notTest = false
+	tokenErr := setBSToken(&DefaultLogger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	DefaultLogger.Caller = 1
 	Trace().Str("foo", "bar").Msg("hello from Trace")
@@ -41,6 +45,11 @@ func TestLoggerInfo(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
+
 	logger.Info().
 		Caller(-1).
 		Bool("bool", true).
@@ -129,6 +138,11 @@ func TestLoggerNil(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("info"),
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
+
 	logger.Debug().
 		Caller(1).
 		Bool("bool", true).
@@ -201,6 +215,10 @@ func TestLoggerInterface(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	var cyclicStruct struct {
 		Value interface{}
@@ -236,6 +254,10 @@ func TestLoggerObject(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	logger.Info().Object("test_object", &testMarshalObject{1, "foo"}).Msg("this is a object test")
 	logger.Info().EmbedObject(&testMarshalObject{1, "foo"}).Msg("this is a object test")
@@ -255,6 +277,10 @@ func TestLoggerLog(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	logger.Log().Msgf("this is a no level log")
 
@@ -265,6 +291,10 @@ func TestLoggerLog(t *testing.T) {
 func TestLoggerByte(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
+	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
 	}
 
 	logger.Info().Byte("gender", 'm').Msg("")
@@ -334,6 +364,10 @@ func TestLoggerCaller(t *testing.T) {
 		Level:  ParseLevel("trace"),
 		Caller: 1,
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 	logger.Trace().Str("foo", "bar").Msg("hello from Trace")
 	logger.Debug().Str("foo", "bar").Msg("hello from Debug")
 	logger.Info().Str("foo", "bar").Msg("hello from Info")
@@ -346,6 +380,10 @@ func TestLoggerCaller(t *testing.T) {
 
 func TestLoggerTimeField(t *testing.T) {
 	logger := Logger{}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	logger.TimeField = "_time"
 	logger.Printf("this is no level and _time field log")
@@ -353,6 +391,10 @@ func TestLoggerTimeField(t *testing.T) {
 
 func TestLoggerTimeFormat(t *testing.T) {
 	logger := Logger{}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	logger.TimeFormat = TimeFormatUnix
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix time log entry")
@@ -369,6 +411,10 @@ func TestLoggerTimeFormat(t *testing.T) {
 
 func TestLoggerTimeOffset(t *testing.T) {
 	logger := Logger{}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	timeOffset = -7 * 3600
 	timeZone = "-07:00"
@@ -380,6 +426,10 @@ func TestLoggerContext(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 	logger.Trace().Context(ctx).Int("no0", 0).Msg("this is zero context log entry")
 	logger.Debug().Context(ctx).Int("no0", 0).Msg("this is zero context log entry")
 	logger.Info().Context(ctx).Int("no1", 1).Msg("this is first context log entry")
@@ -405,6 +455,10 @@ func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log entry")
@@ -434,6 +488,10 @@ func TestLoggerFields(t *testing.T) {
 		Level:  InfoLevel,
 		Caller: 1,
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
 	}
 
 	logger.Info().Fields(Fields{
@@ -505,6 +563,10 @@ func TestStdLogger(t *testing.T) {
 		Context: NewContext(nil).Str("tag", "std_log").Value(),
 		Writer:  &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 
 	stdLog := logger.Std("", stdLog.LstdFlags)
 	stdLog.Print("hello from stdLog Print")
@@ -538,6 +600,10 @@ func (e errno) Format(s fmt.State, verb rune) {
 
 func TestLoggerErrorStack(t *testing.T) {
 	logger := Logger{Level: TraceLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 	logger.Info().Err(errno(0)).Msg("log errno(0) here")
 	logger.Info().Err(errno(1)).Msg("log errno(1) here")
 	logger.Info().Err(errno(2)).Msg("log errno(2) here")
@@ -547,6 +613,10 @@ func TestLoggerErrorStack(t *testing.T) {
 func TestFixMissingErrEntry(t *testing.T) {
 	var b bytes.Buffer
 	logger := Logger{Level: TraceLevel, Writer: &IOWriter{Writer: &b}}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		t.Fatal(tokenErr)
+	}
 	logger.Err(errors.New("test error")).Msg("log error here")
 	if !strings.Contains(b.String(), `"error":"test error"`) {
 		t.Fatal("logger.Err need an error entry if err != nil")
@@ -564,10 +634,26 @@ func BenchmarkLogger(b *testing.B) {
 		Level:      DebugLevel,
 		Writer:     IOWriter{io.Discard},
 	}
+	tokenErr := setBSToken(&logger)
+	if tokenErr != "" {
+		b.Fatal(tokenErr)
+	}
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
 	}
+}
+
+func setBSToken(l *Logger) string {
+	bsToken := os.Getenv("BETTERSTACK_TOKEN")
+	if bsToken == "" {
+		return "please set BETTERSTACK_TOKEN env"
+	}
+
+	l.SetToken(bsToken)
+	l.GoSync = true
+
+	return ""
 }
