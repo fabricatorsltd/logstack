@@ -169,7 +169,7 @@ An out of box example. [![playground][play-simple-img]][play-simple]
 package main
 
 import (
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -190,7 +190,7 @@ To customize logger filed name and format. [![playground][play-customize-img]][p
 package main
 
 import (
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -254,7 +254,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 type Glog struct {
@@ -299,7 +299,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -333,7 +333,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 	"github.com/robfig/cron/v3"
 )
 
@@ -372,7 +372,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 	"github.com/robfig/cron/v3"
 )
 
@@ -418,7 +418,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 	"github.com/robfig/cron/v3"
 )
 
@@ -514,7 +514,7 @@ To logging to different logger as you want, use below idiom. [![playground][play
 package main
 
 import (
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 var logger = struct {
@@ -568,7 +568,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -669,7 +669,7 @@ import (
 	stdlog "log"
 	"os"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -698,7 +698,7 @@ package main
 import (
 	"log/slog"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -721,12 +721,12 @@ func main() {
 
 | Logger | Interceptor |
 |---|---|
-| logr |  https://github.com/phuslu/log-contrib/tree/master/logr |
-| gin |  https://github.com/phuslu/log-contrib/tree/master/gin |
-| fiber |  https://github.com/phuslu/log-contrib/tree/master/fiber |
-| gorm |  https://github.com/phuslu/log-contrib/tree/master/gorm |
-| grpc |  https://github.com/phuslu/log-contrib/tree/master/grpc |
-| grpcgateway |  https://github.com/phuslu/log-contrib/tree/master/grpcgateway |
+| logr |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/logr |
+| gin |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/gin |
+| fiber |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/fiber |
+| gorm |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/gorm |
+| grpc |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/grpc |
+| grpcgateway |  https://github.com/fabricatorsltd/logstack-contrib/tree/master/grpcgateway |
 
 ### User-defined Data Structure
 
@@ -736,7 +736,7 @@ To log with user-defined struct effectively, implements `MarshalObject`. [![play
 package main
 
 import (
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 type User struct {
@@ -784,7 +784,7 @@ You can make a copy of log and add contextual fields. [![playground][play-contex
 package main
 
 import (
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 func main() {
@@ -816,7 +816,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -993,7 +993,7 @@ import (
 	"os"
 
 	"github.com/phuslu/iploc"
-	"github.com/phuslu/log"
+	"github.com/fabricatorsltd/logstack"
 )
 
 type Config struct {
@@ -1100,13 +1100,13 @@ func main() {
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
 [godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
-[godoc]: https://pkg.go.dev/github.com/phuslu/log
-[report-img]: https://goreportcard.com/badge/github.com/phuslu/log
-[report]: https://goreportcard.com/report/github.com/phuslu/log
-[build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
-[build]: https://github.com/phuslu/log/actions
+[godoc]: https://pkg.go.dev/github.com/fabricatorsltd/logstack
+[report-img]: https://goreportcard.com/badge/github.com/fabricatorsltd/logstack
+[report]: https://goreportcard.com/report/github.com/fabricatorsltd/logstack
+[build-img]: https://github.com/fabricatorsltd/logstack/workflows/build/badge.svg
+[build]: https://github.com/fabricatorsltd/logstack/actions
 [stability-img]: https://img.shields.io/badge/stability-maintenance-green.svg
-[high-performance]: https://github.com/phuslu/log#high-performance
+[high-performance]: https://github.com/fabricatorsltd/logstack#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-WudQ__2rGj7R-29BEB0?style=flat&logo=go
@@ -1134,7 +1134,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-stdlog-img]: https://img.shields.io/badge/playground-DnKyE92LEEm-29BEB0?style=flat&logo=go
 [play-slog]: https://go.dev/play/p/ez_yIPOXBQF
 [play-slog-img]: https://img.shields.io/badge/playground-ez__yIPOXBQF-29BEB0?style=flat&logo=go
-[benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
+[benchmark]: https://github.com/fabricatorsltd/logstack/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [gjson]: https://github.com/tidwall/gjson
