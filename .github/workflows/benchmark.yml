@@ -17,6 +17,7 @@ jobs:
           check-latest: true
       - name: Benchmark
         run: |
+          export BETTERSTACK_TOKEN=${{ secrets.BETTERSTACK_TOKEN }}
           curl -sL https://github.com/${GITHUB_REPOSITORY}/raw/master/README.md | \
           awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' | \
           tee log_test.go

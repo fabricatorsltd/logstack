@@ -11,6 +11,7 @@ jobs:
     steps:
       - name: Lint
         run: |
+          export BETTERSTACK_TOKEN=${{ secrets.BETTERSTACK_TOKEN }}
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.51.2
           git clone --depth=1 https://github.com/${GITHUB_REPOSITORY}
           cd $(basename ${GITHUB_REPOSITORY})
